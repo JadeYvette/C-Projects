@@ -1,0 +1,79 @@
+                      | #Jade Wilkins
+                      | #jwilkin1
+                      | #112450816
+                      | 
+  0x000: f208         | rdint   %eax                                 #task
+  0x002: 308101000000 | irmovl $1, %ecx                              #holds 1 for if statement
+  0x008: 308202000000 | irmovl $2, %edx       						 #holds 2 for if statment
+  0x00e: 6101         | subl  %eax, %ecx      						 #checked if task equaled 1
+  0x010: 732d000000   | je firstif            						 #if it equals 1 jump in the if
+  0x015: 6102         | subl %eax, %edx                              #check if task equaled 2
+  0x017: 732d000000   | je firstif           						 #if it equaled 1 jump in the if
+  0x01c: 308101000000 | irmovl $1, %ecx       						 #random move figuring it out
+  0x022: 308201000000 | irmovl $1, %edx
+  0x028: 7034000000   | jmp intro             						 # skips the if statment
+                      | 
+                      | 
+                      | 
+                      | 
+  0x02d: f218         | firstif:            rdint %ecx               #ecx is now the encode value
+  0x02f: 7034000000   |                     jmp intro
+                      | 
+  0x034: f078         | intro:              rdch  %edi               # reads in val 
+  0x036: 308220000000 |                     irmovl $32, %edx         #checks space
+  0x03c: 6172         |                     subl %edi,%edx
+  0x03e: 7334000000   |                     je intro                #goes again if \
+  0x043: 7048000000   |                     jmp checkcond
+                      | 
+  0x048: 30830a000000 | checkcond:          irmovl $10, %ebx         # moves 10 to ebx
+  0x04e: 6173         | 					subl %edi, %ebx          # checks ifvalue \n
+  0x050: 73c5000000   | 					je bottom
+                      | 
+                      |                       
+                      | 
+  0x055: 308201000000 |  whileloop:          irmovl $1, %edx        #moves 1 to edx
+  0x05b: 6102         |                      subl %eax, %edx        #checks if task is 1
+  0x05d: 737f000000   |                      je task1               #jmps if task is 1
+                      |                      
+  0x062: 308202000000 |                      irmovl $2, %edx        #moves 2 to edx
+  0x068: 6102         |                      subl %eax, %edx        #checks if task is 2
+  0x06a: 7386000000   |                      je task2               #jmps if task is 2
+                      | 
+  0x06f: 308101000000 |                      irmovl $1, %ecx        #moves 1 to ecx   
+  0x075: 708d000000   |                      jmp neither            #jmps because its nth
+                      |                   
+  0x07a: 7048000000   |                      jmp checkcond
+                      | 
+                      | 
+  0x07f: 6117         | task1:              subl %ecx,%edi  
+  0x081: 70bc000000   |                     jmp print 
+                      | 
+                      | 
+  0x086: 6017         | task2:             addl %ecx,%edi
+  0x088: 70bc000000   |                    jmp print
+                      | 
+  0x08d: 308261000000 | neither:           irmovl $97, %edx           #checks if val is  >=a
+  0x093: 6172         |                    subl %edi,%edx
+  0x095: 76b4000000   |                    jg else                   #if not greater then a jmp
+                      | 
+  0x09a: 30827a000000 |                    irmovl $122, %edx          #checks if val is <=z
+  0x0a0: 6102         |                    subl %eax,%edx
+  0x0a2: 72b4000000   |                    jl else                   #if not less then z jmp
+                      | 
+  0x0a7: 308220000000 |                    irmovl $32, %edx
+  0x0ad: 6127         |                    subl %edx, %edix             # value-= 32
+  0x0af: 70bc000000   |                    jmp print
+                      | 
+  0x0b4: 308220000000 | else:             irmovl $32, %edx
+  0x0ba: 6027         |                   addl  %edx, %edix 
+                      |     
+                      | 
+  0x0bc: f178         | print:            wrch  %edi               #prints current value
+  0x0be: f078         |                   rdch  %edi               #takes in new value
+  0x0c0: 7048000000   |                   jmp checkcond            #jumps back to top of whi 
+                      | 
+  0x0c5: 30860a000000 | bottom:           irmovl $10, %esi         #moving the new line 
+  0x0cb: f168         |                   wrch %esi                #printing the new line 
+  0x0cd: 10           | halt
+                      | 
+                      | 
