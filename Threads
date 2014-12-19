@@ -1,0 +1,364 @@
+/*Jade Wilkins
+#Project7
+*/
+
+
+#include <time.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <stdio.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+
+typedef struct parameter{
+ 
+  int start;
+  int end;
+  int threads_in;
+  int elements_in;
+  int max_result;
+  long sum_result;
+  int ratio;
+}Parameter;
+
+int print_time();
+int fill_array();
+int print_results(int task, Parameter *p);
+int sum(Parameter *p);
+int max(Parameter *p);
+int print_array(int *array, int size);
+static void *max_helper(void *parm );
+static void *sum_helper(void *parm );
+
+long sum_in = 0;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+int *element_array;
+pthread_t *thread_array;
+
+
+int main(){
+
+int elements,threads,seed,task;
+char result;
+Parameter par;
+Parameter *p_ptr;
+clock_t start_t, end_t, total_t;
+struct rusage usage;
+
+
+do{
+
+     printf("Number of Element?: ");
+     scanf("%d",&elements);
+
+} while(elements < 0 );
+
+  element_array = malloc(sizeof(int) * elements);
+
+
+do{
+    printf("Number of threads?: ");
+    scanf("%d",&threads);
+} while(threads < 0 );
+
+ thread_array = calloc(threads,sizeof(pthread_t));
+
+do{
+
+ printf("Seed?: ");
+ scanf("%d",&seed);
+
+} while(seed < 0 );
+
+do{
+
+        printf("Task 1 or 2 ?: ");
+      scanf("%d",&task);
+
+}while(task > 2 || task < 1 );
+
+
+    printf("Print results?: ");
+    scanf(" %c",&result);
+
+
+
+
+srand(seed);
+fill_array(element_array, elements);
+print_array(element_array,elements);
+
+par.start = 0;
+par.end = elements/threads -1;
+par.ratio = elements/threads;
+par.threads_in = threads;
+par.elements_in = elements;
+par.max_result = 0;
+par.sum_result = 0;
+p_ptr = &par;
+
+
+if(task == 1){
+  
+  start_t = clock();
+  par.max_result = max(p_ptr); 
+  getrusage(RUSAGE_SELF, &usage);
+  end_t = clock();
+
+}
+
+
+if(task == 2 ){
+ 
+ start_t = clock();
+ par.sum_result = sum(p_ptr); 
+ getrusage(RUSAGE_SELF, &usage);
+ end_t = clock();
+
+
+}     
+   if(result == 'y'){
+
+    print_results(task,p_ptr);
+
+
+      }
+      
+     total_t = (double) (end_t - start_t) / CLOCKS_PER_SEC;
+     printf("User Time: %f\n", (double)total_t);
+     printf("Wall Clock: %.2f\n", (double)(time(NULL)));
+     printf ("Sytem/Kernel Clock: %ld.%06ld\n", usage.ru_stime.tv_sec, usage.ru_stime.tv_usec);
+
+      return 0;
+
+
+
+
+   }
+
+
+
+
+int fill_array(int *element_in,int items){
+int i;
+for(i = 0; i < items; i++){
+   
+    element_in[i] = rand() % 11;
+  
+}
+   return 0;
+}
+
+
+
+static void *max_helper(void *parm){
+  Parameter *p;
+  int i;
+  int startpoint;
+  int endpoint;
+  int maxhelper_max;
+
+
+  pthread_mutex_lock(&lock);
+  i = 0;  
+  p = (Parameter *) parm;
+  maxhelper_max = 0;
+  startpoint = p ->start;
+  endpoint = p->end ;
+
+
+
+  for(i = startpoint; i < endpoint; i++){
+
+ 
+    if( element_array[i] > p->max_result){
+
+      maxhelper_max = element_array[i];
+
+
+    }  
+   
+   
+  if(maxhelper_max > p->max_result){
+    
+     p->max_result = maxhelper_max;
+
+  }
+
+
+
+
+ 
+    }
+
+
+    if(p->elements_in % p->threads_in == 0 ){
+
+       p->start = p->end;
+       p->end =   p->start + p->ratio;
+    }
+
+
+    if( (p->elements_in % p->threads_in != 0 ) && (i == p->threads_in -2)){
+       
+       p->start = p->end;
+       p->end =  p->start + p->ratio + (p->elements_in % p->threads_in);
+
+    }
+   
+   pthread_mutex_unlock(&lock);
+   return NULL;
+}
+
+
+int max(Parameter *p ){
+
+      int i;
+      int ratio;
+      if( p->threads_in > p->elements_in){
+
+         ratio = 1;
+
+      }else{
+        
+         ratio = p->elements_in / p->threads_in;
+
+      }
+      
+      p->start= 0;
+      p->end = ratio;
+
+
+  for(i = 0; i < p->threads_in; i++){
+    
+   
+    pthread_create(&thread_array[i],NULL,max_helper,p);
+  
+              
+  }
+
+  for(i = 0; i < p->threads_in;i++){
+
+    pthread_join(thread_array[i],NULL);
+
+  }
+      
+      pthread_mutex_destroy(&lock);
+      return p->max_result;
+
+}
+
+
+
+int print_results(int task,Parameter *p){
+  
+  if(task == 1){
+
+     printf("Results: %d\n",p->max_result);
+  }
+
+ if(task == 2){
+
+   printf("Results: %ld\n",sum_in);
+
+ }
+  return 0;
+}
+
+
+
+
+int print_array(int *array,int size){
+   int i = 0;
+   printf("Array Elements: ");
+   for(i = 0;  i < size;i++){
+      printf("%d ",array[i]);
+   }
+    printf("\n");
+    return 0;
+
+}
+
+
+static void *sum_helper(void *parm){
+ 
+
+  Parameter *p = (Parameter *) parm;
+  int i = 0;
+  int startpoint;
+  int endpoint;
+ 
+
+  pthread_mutex_lock(&lock);
+   i = 0;
+   p = (Parameter *) parm;
+   startpoint = p->start;
+   endpoint = p->end ;
+ 
+
+
+
+  for(i = startpoint; i < endpoint; i++){
+ 
+       sum_in = sum_in + (long)element_array[i];
+    }
+
+    
+    if(p->elements_in % p->threads_in == 0 ){
+
+       p->start = p->end;
+       p->end =   p->start + p->ratio;
+    }
+
+
+    if( (p->elements_in % p->threads_in != 0 ) && (i == p->threads_in -2)){
+       
+       p->start = p->end;
+       p->end =  p->start + p->ratio + (p->elements_in % p->threads_in);
+
+    }
+   
+
+   pthread_mutex_unlock(&lock);
+   return NULL;
+}
+
+
+
+
+int sum(Parameter *p ){
+   
+      int i;
+      int ratio;
+      if( p->threads_in > p->elements_in){
+
+         ratio = 1;
+
+      }else{
+        
+         ratio = p->elements_in / p->threads_in;
+
+      }
+      
+      p->start= 0;
+      p->end = ratio;
+
+
+  for(i = 0; i < p->threads_in; i++){
+    
+    pthread_create(&thread_array[i],NULL,sum_helper,p);
+     
+
+              
+  }
+
+  for(i = 0; i < p->threads_in;i++){
+
+    pthread_join(thread_array[i],NULL);
+
+  }
+
+      pthread_mutex_destroy(&lock);
+      return sum_in;
+
+}
