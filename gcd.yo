@@ -1,0 +1,58 @@
+                      | #Jade Wilkins
+                      | #jwilkin1
+                      | #112450816
+  0x000: 308400100000 | main:       irmovl $0x1000, %esp  # init stack ptr
+                      | 
+  0x006: f208         |             rdint %eax                         #reads in x
+  0x008: f238         |             rdint %ebx                         #reads in y
+                      | 
+  0x00a: a038         |             pushl %ebx                         #pushing parameter a
+  0x00c: a008         |             pushl %eax                         #pushing parameter b
+                      | 
+  0x00e: 8023000000   |             call gcd                           #function call
+                      | 
+  0x013: b008         |             popl %eax                          #removing parameter
+  0x015: b038         |             popl %ebx                          #removing parameter
+                      |       
+  0x017: 10           |             halt   
+  0x018: f378         |             wrint %edi                       #print out gcd return value
+  0x01a: 30820a000000 |             irmovl $10,%edx                    # move new line character
+  0x020: f128         |             wrch  %edx                         # print new line charater 
+                      | 
+  0x022: 10           |             halt
+                      | 
+                      | 
+  0x023: a058         | gcd:        pushl %ebp                         # ON_ENTRY saving old base/frame pt
+  0x025: 2045         |             rrmovl %esp, %ebp                  # ON_ENTRY set new frame ptr    
+                      |             
+  0x027: 501508000000 |             mrmovl  8(%ebp),%ecx               #retrieving  a
+  0x02d: 50250c000000 |             mrmovl  12(%ebp),%edx              #retrieving  b
+                      |             
+  0x033: 308600000000 |             irmovl $0, %esi                    #moving 0 for if statment
+  0x039: 6126         |             subl  %edx,%esi                    #if B is 0
+  0x03b: 735a000000   |             je basecase
+                      | 
+                      |             
+                      |           
+                      |                                              
+                      | 
+  0x040: 2026         | recstep:    rrmovl %edx, %esi                  #making a copy of the b value 
+  0x042: 6621         |             modl %edx, %ecx                    #a%b is now in %ecx
+  0x044: 2012         |             rrmovl %ecx, %edx                  # moving b value back to old a regi
+  0x046: 2061         |             rrmovl %esi, %ecx
+                      |       
+  0x048: a028         |             pushl %edx                         #pushing a%b parameter
+  0x04a: a018         |             pushl %ecx                         #pushing  b parameter
+                      | 
+  0x04c: 8023000000   |             call gcd                           #recursive call
+                      | 
+  0x051: b018         |             popl %ecx                          #getting rid of parameter
+  0x053: b028         |             popl %edx                          #getting rid of parameter
+  0x055: 705c000000   |             jmp gcdend
+                      |             
+  0x05a: 2017         | basecase:   rrmovl %ecx,%edi
+                      | 
+                      | 
+  0x05c: 2054         | gcdend:     rrmovl %ebp, %esp                  # ON_EXIT reset stack ptr
+  0x05e: b058         |             popl %ebp                          # ON_EXIT restore old frame 
+  0x060: 90           |             ret                                # ON_EXIT

@@ -1,0 +1,58 @@
+#Jade Wilkins
+#jwilkin1
+#112450816
+main:       irmovl $0x1000, %esp  # init stack ptr
+
+            rdint %eax                         #reads in x
+            rdint %ebx                         #reads in y
+
+            pushl %ebx                         #pushing parameter a
+            pushl %eax                         #pushing parameter b
+
+            call gcd                           #function call
+
+            popl %eax                          #removing parameter
+            popl %ebx                          #removing parameter
+      
+            halt   
+            wrint %edi                       #print out gcd return value
+            irmovl $10,%edx                    # move new line character
+            wrch  %edx                         # print new line charater 
+
+            halt
+
+
+gcd:        pushl %ebp                         # ON_ENTRY saving old base/frame pt
+            rrmovl %esp, %ebp                  # ON_ENTRY set new frame ptr    
+            
+            mrmovl  8(%ebp),%ecx               #retrieving  a
+            mrmovl  12(%ebp),%edx              #retrieving  b
+            
+            irmovl $0, %esi                    #moving 0 for if statment
+            subl  %edx,%esi                    #if B is 0
+            je basecase
+
+            
+          
+                                             
+
+recstep:    rrmovl %edx, %esi                  #making a copy of the b value 
+            modl %edx, %ecx                    #a%b is now in %ecx
+            rrmovl %ecx, %edx                  # moving b value back to old a regi
+            rrmovl %esi, %ecx
+      
+            pushl %edx                         #pushing a%b parameter
+            pushl %ecx                         #pushing  b parameter
+
+            call gcd                           #recursive call
+
+            popl %ecx                          #getting rid of parameter
+            popl %edx                          #getting rid of parameter
+            jmp gcdend
+            
+basecase:   rrmovl %ecx,%edi
+
+
+gcdend:     rrmovl %ebp, %esp                  # ON_EXIT reset stack ptr
+            popl %ebp                          # ON_EXIT restore old frame 
+            ret                                # ON_EXIT
